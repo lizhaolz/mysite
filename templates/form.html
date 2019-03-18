@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block title %}
+    {{ page_title }}
+{% endblock %}
+
+{% block nav_home_active %}active{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-4 col-xs-offset-4">  {# 占4列，左右各4列，其实就是居中 #}
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{{ form_title }}</h3>
+                    </div>
+                    <div class="panel-body">
+                        <form action="" method="POST"> {# 空代表指向自己 #}
+                            {% csrf_token %}    {# 取消csrf保护 #}
+                            {% for field in form %}
+                                {% if not field.is_hidden %}
+                                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {% endif %}
+                                {{ field }}
+                                <p class="text-danger">{{ field.errors.as_text }}</p>   {# 字段错误 #}
+                            {% endfor %}
+                            <span id="tip" class="text-danger">{{ form.non_field_errors }}</span> {# form，即验证错误 #}
+                            <div class="clearfix"></div>
+                            <div class="pull-left">
+                                {% block other_buttons %}{% endblock %}
+                            </div>
+                            <input type="submit" value="{{ submit_text }}" class=" btn btn-primary pull-right">
+                        </form>
+                        <button class="btn btn-default pull-right" onclick="window.location.href='{{ return_back_url }}'">返回</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

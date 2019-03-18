@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block title %}
+    我的网站|注册
+{% endblock %}
+
+{% block nav_home_active %}active{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-4 col-xs-offset-4">
+                {% if not user.is_authenticated %}
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">注册</h3>
+                        </div>
+                        <div class="panel-body">
+                            <form action="" method="POST"> {# 空代表指向自己 #}
+                                {% csrf_token %}    {# 取消csrf保护 #}
+                                {% for field in reg_form %}
+                                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                    {{ field }}
+                                    <p class="text-danger">{{ field.errors.as_text }}</p>  {# 字段错误，是由clean_+字段名方法抛出的错误 #}
+                                {% endfor %}
+                                <span class="text-danger">{{ reg_form.non_field_errors }}</span>  {#  验证错误，是由clean方法抛出的错误 #}
+                                <div class="clearfix"></div>
+                                <button id="send_code" class="btn btn-primary pull-left">发送验证码</button>
+                                <input type="submit" value="注册" class=" btn btn-primary pull-right">
+                            </form>
+                        </div>
+                    </div>
+                {% else %}
+                    <span>已登录，跳转到首页...</span>
+                    <script type="text/javascript">
+                        window.location.href='/';
+                    </script>
+                {% endif %}
+
+
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block script_extends %}
+    <script type="text/javascript">
+        $("#send_code").click(function (event) {
+            event.preventDefault();
+            var email = $("#id_email").val();
+            if(email==''){
+                $("#tip").text("邮箱不能为空");
+                return false;
+            }
+            // 发送验证码
+            $.ajax({
+                url: "{% url 'send_verification_code' %}",
+                type: 'GET',
+                data: {
+                    'email': email,
+                    'send_for': 'register_code'
+                },
+                cache: false,
+                success: function (data) {
+                    if(data['status']=='ERROR'){
+                        alert(data['status']);
+                    }
+                },
+                error:function (xhr) {
+                  alert('出错了');
+                }
+            });
+            // 把按钮变成灰
+            $(this).addClass('disabled');
+            $(this).attr('disabled', true);
+            var time = 30;
+            $(this).text(time+'s');
+            var interval = setInterval(() =>{  // 这里之所以用箭头函数是为了在函数里能用$(this),这样的话this指向的就是button
+                if(time<=0){
+                    clearInterval(interval);
+                    $(this).removeClass('disabled');
+                    $(this).attr('disabled', false);
+                    $(this).text('发送验证码');
+                    return false;
+                }
+                time--;
+                $(this).text(time+'s');
+            },1000); // 每1000毫秒执行箭头函数
+        });
+    </script>
+{% endblock %}
